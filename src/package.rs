@@ -1,7 +1,7 @@
 use rusqlite::{Connection, Transaction};
 use std::time::{SystemTime, UNIX_EPOCH};
 use tempfile::NamedTempFile;
-use zip::{write::FileOptions, ZipWriter};
+use zip::{write::FileOptions, CompressionMethod, ZipWriter};
 
 use std::collections::HashMap;
 use std::fs::File;
@@ -110,7 +110,7 @@ impl Package {
 
         let mut outzip = ZipWriter::new(writer);
         outzip
-            .start_file("collection.anki2", FileOptions::default())
+            .start_file("collection.anki2", FileOptions::default().compression_method(CompressionMethod::Stored))
             .map_err(zip_error)?;
         outzip.write_all(&read_file_bytes(db_file)?)?;
 
@@ -134,13 +134,13 @@ impl Package {
             .collect::<HashMap<String, &str>>();
         let media_json = serde_json::to_string(&media_map).map_err(json_error)?;
         outzip
-            .start_file("media", FileOptions::default())
+            .start_file("media", FileOptions::default().compression_method(CompressionMethod::Stored))
             .map_err(zip_error)?;
         outzip.write_all(media_json.as_bytes())?;
 
         for (idx, &path) in &media_file_idx_to_path {
             outzip
-                .start_file(idx.to_string(), FileOptions::default())
+                .start_file(idx.to_string(), FileOptions::default().compression_method(CompressionMethod::Stored))
                 .map_err(zip_error)?;
             outzip.write_all(&read_file_bytes(path)?)?;
         }
